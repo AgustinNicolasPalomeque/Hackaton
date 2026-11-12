@@ -10,8 +10,6 @@ const totalGastos = document.getElementById("totalGastos");
 
 const balanceNeto = document.getElementById("balanceNeto");
 
-const resumenCategorias = document.getElementById("resumenCategorias");
-
 const btnVaciarTodo = document.getElementById("btnVaciarTodo");
 
 const datosGuardados = localStorage.getItem("transacciones");
@@ -74,8 +72,6 @@ if (!descripcion.trim() || !Number.isFinite(monto) || monto <= 0) {
   renderizarTabla();
 
   actualizarBalance();
-
-  mostrarResumenCategorias();
 
   crearGraficoCategorias();
 
@@ -143,35 +139,6 @@ function actualizarBalance() {
     balanceNeto.textContent =
     `$${balance.toLocaleString("es-AR")}`;
 
-}
-
-
-function mostrarResumenCategorias() {
-    resumenCategorias.innerHTML = "";
-
-    const categorias = {};
-
-    Transaccion.historial.forEach((transaccion) => {
-        const clave = `${transaccion.tipo}-${transaccion.categoria}`;
-
-        if (!categorias[clave]) {
-            categorias[clave] = 0;
-        }
-
-        categorias[clave] += transaccion.monto;
-        
-    });
-
-    for (const clave in categorias) {
-        const [tipo, categoria] = clave.split("-");
-
-        resumenCategorias.innerHTML += `
-            <div class="p-2 border-b">
-                <strong>${categoria}</strong>
-                (${tipo}):$${categorias[clave].toLocaleString("es-AR")}
-            </div>
-        `;
-    }
 }
 
 
@@ -296,7 +263,11 @@ function crearGraficoEvolucion() {
 
   const fechas = [...new Set(
     Transaccion.historial.map(t => t.fecha)
-  )];
+  )].sort((a, b) => {
+    const [diaA, mesA, anioA] = a.split("/");
+    const [diaB, mesB, anioB] = b.split("/");
+    return new Date(anioA, mesA - 1, diaA) - new Date(anioB, mesB - 1, diaB);
+  });
 
   const ingresos = [];
   const gastos = [];
@@ -415,7 +386,6 @@ window.eliminarTransaccion = function (id) {
       guardarDatos();
       renderizarTabla();
       actualizarBalance();
-      mostrarResumenCategorias();
       crearGraficoCategorias();
       crearGraficoEvolucion();
 
@@ -458,7 +428,6 @@ btnVaciarTodo.addEventListener("click", function () {
       guardarDatos();
       renderizarTabla();
       actualizarBalance();
-      mostrarResumenCategorias();
       crearGraficoCategorias();
       crearGraficoEvolucion();
 
@@ -476,6 +445,5 @@ btnVaciarTodo.addEventListener("click", function () {
 
 renderizarTabla();
 actualizarBalance();
-mostrarResumenCategorias();
 crearGraficoCategorias();
 crearGraficoEvolucion();
